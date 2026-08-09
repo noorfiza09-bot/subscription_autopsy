@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dotted leader between a merchant name and its amount, like a printed receipt. */
+.leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(247, 245, 240, 0.25);
+  margin: 0 0.6rem;
+  transform: translateY(-4px);
+}
+
+/* Perforated edge along the top of a "torn receipt" card. */
+.perforated-top {
+  background-image: radial-gradient(circle, rgba(15, 27, 43, 0.9) 2px, transparent 2px);
+  background-size: 14px 100%;
+  background-position: top;
+  background-repeat: repeat-x;
+  height: 6px;
+}

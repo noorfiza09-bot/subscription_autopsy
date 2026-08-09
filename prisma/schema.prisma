@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime       @default(now())
+  statements    Statement[]
+  transactions  Transaction[]
+  subscriptions Subscription[]
+}
+
+model Statement {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename     String
+  uploadedAt   DateTime      @default(now())
+  transactions Transaction[]
+}
+
+model Transaction {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statementId     String
+  statement       Statement  @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  date            DateTime
+  merchantRaw     String
+  merchantNormalized String
+  amount          Float
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId, merchantNormalized])
+}
+
+enum Frequency {
+  WEEKLY
+  MONTHLY
+  YEARLY
+  UNKNOWN
+}
+
+model Subscription {
+  id                 String        @id @default(cuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchantNormalized String
+  displayName        String
+  amount             Float
+  previousAmount     Float?
+  frequency          Frequency     @default(MONTHLY)
+  category           String?
+  lastChargeDate     DateTime
+  nextExpectedDate   DateTime?
+  isConfirmed        Boolean       @default(false)
+  isDismissed        Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  transactions       Transaction[]
+
+  @@unique([userId, merchantNormalized])
+}
