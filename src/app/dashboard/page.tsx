@@ -14,6 +14,7 @@ type Subscription = {
   lastChargeDate: string;
   nextExpectedDate: string | null;
   isConfirmed: boolean;
+  isDismissed: boolean;
   category: string | null;
 };
 
