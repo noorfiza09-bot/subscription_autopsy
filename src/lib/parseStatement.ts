@@ -1,13 +1,7 @@
 import Papa from "papaparse";
 import type { RawTransaction } from "./detectSubscriptions";
+import { parseDate } from "./dateUtils";
 
-/**
- * Parses a bank/card CSV export into normalized transactions.
- *
- * Bank CSV exports vary a lot in column naming. This looks for common
- * header variants; adjust COLUMN_ALIASES as you test against real
- * statements from your own bank.
- */
 const DATE_KEYS = ["date", "transaction date", "posted date"];
 const DESC_KEYS = ["description", "merchant", "narration", "details", "particulars"];
 const AMOUNT_KEYS = ["amount", "debit", "withdrawal", "amount (inr)"];
@@ -44,33 +38,6 @@ export function parseStatementCsv(csvText: string): RawTransaction[] {
   }
 
   return transactions;
-}
-
-/**
- * JS's `new Date("02/03/2026")` assumes US MM/DD/YYYY and will silently
- * (and wrongly) parse this as Feb 3 instead of March 2. Indian bank
- * statements use DD/MM/YYYY, so we parse that format explicitly rather
- * than trusting the ambiguous built-in parser. ISO dates (YYYY-MM-DD)
- * are unambiguous and pass through to the native parser as-is.
- */
-function parseDate(raw: string): Date {
-  const value = (raw || "").trim();
-
-  // ISO format (YYYY-MM-DD or with time) — unambiguous, safe to use natively.
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    return new Date(value);
-  }
-
-  // DD/MM/YYYY or DD-MM-YYYY (the common Indian bank statement format).
-  const match = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (match) {
-    const [, day, month, year] = match;
-    return new Date(Number(year), Number(month) - 1, Number(day));
-  }
-
-  // Fall back to native parsing for anything else (last resort — may be
-  // ambiguous, but better than nothing for unexpected formats).
-  return new Date(value);
 }
 
 function findKey(

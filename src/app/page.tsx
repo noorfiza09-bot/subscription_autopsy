@@ -16,9 +16,9 @@ export default async function Home() {
           Subscription Autopsy
         </h1>
         <p className="text-slate">
-          Upload a bank or card statement. We'll find every recurring charge
-          you forgot you agreed to — and tell you exactly what it's costing
-          you.
+          Upload a bank or card statement (CSV or PDF). We'll find every
+          recurring charge you forgot you agreed to — and tell you exactly
+          what it's costing you.
         </p>
       </div>
 

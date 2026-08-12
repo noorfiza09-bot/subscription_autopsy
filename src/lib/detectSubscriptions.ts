@@ -45,6 +45,8 @@ export function detectSubscriptions(transactions: RawTransaction[]): DetectedSub
     groups.set(key, list);
   }
 
+  mergeSimilarMerchantGroups(groups);
+
   const results: DetectedSubscription[] = [];
 
   for (const [key, txs] of groups) {
@@ -91,6 +93,76 @@ export function detectSubscriptions(transactions: RawTransaction[]): DetectedSub
 
   // Highest spend first — most impactful subscriptions surface at the top.
   return results.sort((a, b) => b.amount - a.amount);
+}
+
+/**
+ * Merges normalized-merchant groups that are near-identical but not exact
+ * matches — e.g. "amazon prime" vs "amazon primevideo", or a merchant
+ * whose descriptor picked up a stray character in one statement but not
+ * another. Without this, the same real subscription can end up split
+ * across two groups and never accumulate enough occurrences to be
+ * detected as recurring.
+ *
+ * Deliberately conservative: only merges keys of similar length within a
+ * small edit-distance threshold, so distinct short merchant names (e.g.
+ * "uber" vs "uber eats") don't get incorrectly collapsed together.
+ */
+function mergeSimilarMerchantGroups(groups: Map<string, RawTransaction[]>): void {
+  const keys = Array.from(groups.keys());
+
+  for (let i = 0; i < keys.length; i++) {
+    const keyA = keys[i];
+    if (!groups.has(keyA)) continue; // already merged away
+
+    for (let j = i + 1; j < keys.length; j++) {
+      const keyB = keys[j];
+      if (!groups.has(keyB)) continue;
+
+      if (areSimilarMerchantNames(keyA, keyB)) {
+        const merged = [...groups.get(keyA)!, ...groups.get(keyB)!];
+        groups.set(keyA, merged);
+        groups.delete(keyB);
+      }
+    }
+  }
+}
+
+function areSimilarMerchantNames(a: string, b: string): boolean {
+  if (a === b) return true;
+  // Skip very short names — edit distance is meaningless/risky there
+  // (e.g. "gpay" vs "gpay2" would look "close" but may be unrelated).
+  if (a.length < 6 || b.length < 6) return false;
+
+  const lengthDiff = Math.abs(a.length - b.length);
+  if (lengthDiff > 3) return false; // cheap early exit before the full DP pass
+
+  const distance = levenshteinDistance(a, b);
+  const maxLen = Math.max(a.length, b.length);
+  // Allow roughly 1 edit per 8 characters, capped at 3 edits.
+  const threshold = Math.min(3, Math.floor(maxLen / 8) + 1);
+  return distance <= threshold;
+}
+
+function levenshteinDistance(a: string, b: string): number {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () =>
+    new Array(b.length + 1).fill(0)
+  );
+
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1, // deletion
+        dp[i][j - 1] + 1, // insertion
+        dp[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+
+  return dp[a.length][b.length];
 }
 
 function classifyFrequency(intervals: number[]): DetectedSubscription["frequency"] {

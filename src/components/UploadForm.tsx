@@ -38,13 +38,13 @@ export function UploadForm() {
         className="flex flex-col items-center justify-center gap-2 rounded-sm border border-dashed border-paper/30 bg-ink-light px-8 py-12 text-center cursor-pointer hover:border-sage/60 transition-colors"
       >
         <span className="font-display text-lg">
-          {file ? file.name : "Drop your statement CSV here"}
+          {file ? file.name : "Drop your statement CSV or PDF here"}
         </span>
         <span className="text-sm text-slate">or click to browse</span>
         <input
           id="statement"
           type="file"
-          accept=".csv"
+          accept=".csv,.pdf"
           className="hidden"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />

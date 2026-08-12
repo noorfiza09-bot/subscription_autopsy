@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseStatementCsv } from "@/lib/parseStatement";
-import { detectSubscriptions } from "@/lib/detectSubscriptions";
+import { parseStatementPdfText } from "@/lib/parseStatementPdf";
+import { detectSubscriptions, RawTransaction } from "@/lib/detectSubscriptions";
 import { normalizeMerchant } from "@/lib/normalizeMerchant";
 import { suggestCategory } from "@/lib/suggestCategory";
 
@@ -21,12 +22,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const csvText = await file.text();
-    const parsedTransactions = parseStatementCsv(csvText);
+    const isPdf = file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf";
+
+    let parsedTransactions: RawTransaction[];
+
+    if (isPdf) {
+      // pdf-parse expects a Buffer, not a browser File/Blob.
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Lazy-required to avoid pdf-parse's debug-mode file read running at
+      // module load time in some bundling setups.
+      const pdfParse = (await import("pdf-parse")).default;
+      const pdfData = await pdfParse(buffer);
+      parsedTransactions = parseStatementPdfText(pdfData.text);
+    } else {
+      const csvText = await file.text();
+      parsedTransactions = parseStatementCsv(csvText);
+    }
 
     if (parsedTransactions.length === 0) {
       return NextResponse.json(
-        { error: "Couldn't find any valid transactions in that file. Check the CSV columns." },
+        {
+          error: isPdf
+            ? "Couldn't find any transaction lines in that PDF. It may be a scanned/image-based statement rather than a text-based one, or your bank's layout doesn't match the expected pattern yet."
+            : "Couldn't find any valid transactions in that file. Check the CSV columns.",
+        },
         { status: 422 }
       );
     }
@@ -63,7 +84,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await prisma.subscription.upsert({
+      const savedSub = await prisma.subscription.upsert({
         where: {
           userId_merchantNormalized: {
             userId,
@@ -88,6 +109,14 @@ export async function POST(req: NextRequest) {
           lastChargeDate: sub.lastChargeDate,
           nextExpectedDate: sub.nextExpectedDate,
         },
+      });
+
+      // Link every transaction from this merchant to its subscription so
+      // we can later query real spend history (e.g. the trend chart)
+      // instead of only ever seeing the current snapshot.
+      await prisma.transaction.updateMany({
+        where: { userId, merchantNormalized: sub.merchantNormalized },
+        data: { subscriptionId: savedSub.id },
       });
     }
 
