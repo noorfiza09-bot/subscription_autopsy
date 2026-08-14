@@ -9,6 +9,7 @@ import { SpendTrendChart } from "@/components/SpendTrendChart";
 type Subscription = {
   id: string;
   displayName: string;
+  merchantNormalized: string;
   amount: number;
   previousAmount: number | null;
   frequency: string;
@@ -17,6 +18,7 @@ type Subscription = {
   isConfirmed: boolean;
   isDismissed: boolean;
   category: string | null;
+  lastReminderSentAt: string | null;
 };
 
 type TrendPoint = { month: string; total: number };
@@ -52,17 +54,30 @@ export default function Dashboard() {
   const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/subscriptions").then((r) => r.json()),
       fetch("/api/subscriptions/trend").then((r) => r.json()),
-    ]).then(([subsData, trendData]) => {
+      fetch("/api/user/settings").then((r) => r.json()),
+    ]).then(([subsData, trendData, settingsData]) => {
       setSubs(subsData);
       setTrend(trendData);
+      setEmailNotificationsEnabled(settingsData.emailNotificationsEnabled);
       setLoading(false);
     });
   }, []);
+
+  async function toggleEmailNotifications() {
+    const next = !emailNotificationsEnabled;
+    setEmailNotificationsEnabled(next); // optimistic update
+    await fetch("/api/user/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailNotificationsEnabled: next }),
+    });
+  }
 
   async function patchSub(id: string, body: Partial<Subscription>) {
     await fetch(`/api/subscriptions/${id}`, {
@@ -111,12 +126,26 @@ export default function Dashboard() {
             <span className="font-mono text-paper">₹{monthlyTotal.toFixed(2)}</span> / month
           </p>
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors whitespace-nowrap"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleEmailNotifications}
+            className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors whitespace-nowrap"
+            title="Toggle email renewal reminders"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                emailNotificationsEnabled ? "bg-sage" : "bg-slate"
+              }`}
+            />
+            Email reminders {emailNotificationsEnabled ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors whitespace-nowrap"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       {loading && (

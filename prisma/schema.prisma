@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  passwordHash  String
-  name          String?
-  createdAt     DateTime       @default(now())
-  statements    Statement[]
-  transactions  Transaction[]
-  subscriptions Subscription[]
+  id                        String         @id @default(cuid())
+  email                     String         @unique
+  passwordHash              String
+  name                      String?
+  emailNotificationsEnabled Boolean        @default(true)
+  createdAt                 DateTime       @default(now())
+  statements                Statement[]
+  transactions              Transaction[]
+  subscriptions             Subscription[]
 }
 
 model Statement {
@@ -64,6 +65,7 @@ model Subscription {
   nextExpectedDate   DateTime?
   isConfirmed        Boolean       @default(false)
   isDismissed        Boolean       @default(false)
+  lastReminderSentAt DateTime?
   createdAt          DateTime      @default(now())
   transactions       Transaction[]
 

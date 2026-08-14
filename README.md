@@ -227,3 +227,48 @@ Then re-upload your CSV — newly detected subscriptions will get an
 auto-suggested category, and if you re-upload data that includes a price
 change (like the sample statement's Netflix hike), you'll see a red
 "▲ went up from ₹X" badge on that card.
+
+## Setting up email renewal reminders
+
+This checks daily for subscriptions renewing in the next 3 days and emails
+you a summary. It runs as a scheduled job (cron), not something triggered
+by opening the app — so it needs a bit more setup than the rest.
+
+1. **Sign up for Resend** at [resend.com](https://resend.com) (free tier:
+   100 emails/day, no credit card needed). Grab your API key from the
+   dashboard.
+
+2. **Add env vars** — `RESEND_API_KEY` from step 1, and generate a
+   `CRON_SECRET` with `openssl rand -base64 24`. Add both locally (`.env`)
+   and in Vercel's environment variables for production.
+
+3. **About the sender address**: without verifying your own domain,
+   Resend's sandbox address (`onboarding@resend.dev`, already set as the
+   default `EMAIL_FROM`) only delivers to the email you signed up to
+   Resend with — fine for testing, not for real users. To email anyone,
+   verify a domain you own in Resend's dashboard and change `EMAIL_FROM`
+   to an address on that domain.
+
+4. **Test it manually** before waiting for the actual schedule. With the
+   dev server running:
+   ```bash
+   curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/reminders
+   ```
+   It'll return JSON like `{"checked": 2, "emailsSent": 1, "errors": []}`.
+   If `checked` is 0, none of your subscriptions currently have a
+   `nextExpectedDate` within the next 3 days — that's expected most of the
+   time, not a bug. You can temporarily edit a subscription's
+   `nextExpectedDate` in `prisma studio` to a date 1-2 days out to force a
+   test send.
+
+5. **On Vercel**, the schedule in `vercel.json` (`0 9 * * *` — 9am UTC
+   daily) runs automatically once deployed; Vercel calls the route itself
+   with the `CRON_SECRET` you set as an Authorization header, no extra
+   config needed. Note: Vercel's free Hobby plan limits cron jobs to
+   running once a day, which is exactly what this needs, so no upgrade
+   required.
+
+6. **Migration needed** — the schema gained a `lastReminderSentAt` field:
+   ```bash
+   npx prisma migrate dev --name add_reminder_tracking
+   ```

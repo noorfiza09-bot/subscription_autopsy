@@ -1,10 +1,13 @@
 "use client";
 
+import { getCancellationInfo } from "@/lib/cancellationLinks";
+
 const CATEGORIES = ["Streaming", "Fitness", "Software", "Shopping", "Utilities", "Other"];
 
 type Subscription = {
   id: string;
   displayName: string;
+  merchantNormalized: string;
   amount: number;
   previousAmount: number | null;
   frequency: string;
@@ -12,6 +15,7 @@ type Subscription = {
   nextExpectedDate: string | null;
   isConfirmed: boolean;
   category: string | null;
+  lastReminderSentAt: string | null;
 };
 
 export function SubscriptionCard({
@@ -25,6 +29,8 @@ export function SubscriptionCard({
   onDismiss: (id: string) => void;
   onCategoryChange: (id: string, category: string) => void;
 }) {
+  const cancellationInfo = getCancellationInfo(sub.merchantNormalized);
+
   return (
     <div className="bg-paper text-ink rounded-sm overflow-hidden">
       <div className="perforated-top" />
@@ -51,6 +57,11 @@ export function SubscriptionCard({
           {!sub.isConfirmed && (
             <span className="text-amber uppercase tracking-wide">unconfirmed</span>
           )}
+          {sub.lastReminderSentAt && (
+            <span className="text-sage">
+              ✓ reminded {new Date(sub.lastReminderSentAt).toLocaleDateString()}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3 mt-3 flex-wrap">
@@ -69,6 +80,18 @@ export function SubscriptionCard({
             Not a subscription
           </button>
 
+          {cancellationInfo && (
+            <a
+              href={cancellationInfo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-mono px-3 py-1 border border-coral/40 text-coral rounded-sm hover:bg-coral/10 transition-colors"
+              title={cancellationInfo.note}
+            >
+              Cancel this ↗
+            </a>
+          )}
+
           <select
             value={sub.category ?? ""}
             onChange={(e) => onCategoryChange(sub.id, e.target.value)}
@@ -84,6 +107,10 @@ export function SubscriptionCard({
             ))}
           </select>
         </div>
+
+        {cancellationInfo?.note && (
+          <p className="text-xs text-slate mt-2">{cancellationInfo.note}</p>
+        )}
       </div>
     </div>
   );
