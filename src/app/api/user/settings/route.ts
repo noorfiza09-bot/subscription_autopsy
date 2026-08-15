@@ -11,7 +11,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, emailNotificationsEnabled: true },
+    select: { email: true, emailNotificationsEnabled: true, monthlyBudget: true },
   });
 
   return NextResponse.json(user);
@@ -23,12 +23,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
-  const { emailNotificationsEnabled } = await req.json();
+  const body = await req.json();
+  const { emailNotificationsEnabled, monthlyBudget } = body as {
+    emailNotificationsEnabled?: boolean;
+    monthlyBudget?: number | null;
+  };
 
   const updated = await prisma.user.update({
     where: { id: session.user.id },
-    data: { emailNotificationsEnabled: Boolean(emailNotificationsEnabled) },
-    select: { email: true, emailNotificationsEnabled: true },
+    data: {
+      ...(emailNotificationsEnabled !== undefined && {
+        emailNotificationsEnabled: Boolean(emailNotificationsEnabled),
+      }),
+      ...(monthlyBudget !== undefined && {
+        monthlyBudget: monthlyBudget === null ? null : Number(monthlyBudget),
+      }),
+    },
+    select: { email: true, emailNotificationsEnabled: true, monthlyBudget: true },
   });
 
   return NextResponse.json(updated);

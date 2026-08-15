@@ -22,11 +22,13 @@ export function SubscriptionCard({
   sub,
   onConfirm,
   onDismiss,
+  onCancel,
   onCategoryChange,
 }: {
   sub: Subscription;
   onConfirm: (id: string) => void;
   onDismiss: (id: string) => void;
+  onCancel: (id: string) => void;
   onCategoryChange: (id: string, category: string) => void;
 }) {
   const cancellationInfo = getCancellationInfo(sub.merchantNormalized);
@@ -79,6 +81,16 @@ export function SubscriptionCard({
           >
             Not a subscription
           </button>
+
+          {sub.isConfirmed && (
+            <button
+              onClick={() => onCancel(sub.id)}
+              className="text-xs font-mono px-3 py-1 border border-sage/50 text-sage rounded-sm hover:bg-sage/10 transition-colors"
+              title="Track this as money saved"
+            >
+              I cancelled this ✕
+            </button>
+          )}
 
           {cancellationInfo && (
             <a

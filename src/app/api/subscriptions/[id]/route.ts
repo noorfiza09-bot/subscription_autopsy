@@ -17,10 +17,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const body = await req.json();
-  const { isConfirmed, isDismissed, category } = body as {
+  const { isConfirmed, isDismissed, category, wasCancelled } = body as {
     isConfirmed?: boolean;
     isDismissed?: boolean;
     category?: string;
+    wasCancelled?: boolean;
   };
 
   const updated = await prisma.subscription.update({
@@ -29,6 +30,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       ...(isConfirmed !== undefined && { isConfirmed }),
       ...(isDismissed !== undefined && { isDismissed }),
       ...(category !== undefined && { category }),
+      // Cancelling is distinct from a plain "not a subscription" dismiss —
+      // it records when it happened so the savings tracker can compute
+      // how long you've been saving that money.
+      ...(wasCancelled !== undefined && {
+        wasCancelled,
+        cancelledAt: wasCancelled ? new Date() : null,
+      }),
     },
   });
 
