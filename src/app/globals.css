@@ -18,3 +18,35 @@
   background-repeat: repeat-x;
   height: 6px;
 }
+
+@keyframes receipt-line-print {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-receipt-line {
+  animation: receipt-line-print 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-receipt-line {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+::selection {
+  background: #6fcf97;
+  color: #0f1b2b;
+}
+
+:focus-visible {
+  outline: 2px solid #6fcf97;
+  outline-offset: 2px;
+}

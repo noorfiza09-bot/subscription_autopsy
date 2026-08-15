@@ -24,7 +24,8 @@
     "recharts": "^2.12.7",
     "resend": "^4.0.1",
     "bcryptjs": "^2.4.3",
-    "jspdf": "^2.5.2"
+    "jspdf": "^2.5.2",
+    "lucide-react": "^0.395.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

@@ -3,8 +3,13 @@ import "./globals.css";
 import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 
 export const metadata: Metadata = {
-  title: "Subscription Autopsy",
-  description: "Find out what's actually eating your money every month.",
+  title: {
+    default: "Subscription Autopsy — find every charge you forgot about",
+    template: "%s · Subscription Autopsy",
+  },
+  description:
+    "Upload a bank statement and find every recurring subscription hiding in it — including the price hikes you never noticed.",
+  themeColor: "#0F1B2B",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

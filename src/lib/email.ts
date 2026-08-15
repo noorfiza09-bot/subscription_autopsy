@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Resend's sandbox sender — works without verifying your own domain, but
 // can only send to the email address you signed up to Resend with. Swap
 // this for a verified domain address (e.g. reminders@yourdomain.com) once
@@ -16,6 +14,13 @@ export type UpcomingRenewal = {
 };
 
 export async function sendRenewalReminderEmail(to: string, renewals: UpcomingRenewal[]) {
+  // Created here, not at module load time — the Resend SDK throws
+  // immediately if the API key is missing, which would otherwise crash
+  // the build step the moment this module gets imported (e.g. Vercel
+  // analyzing the /api/cron/reminders route), even if the key is only
+  // actually needed at request time.
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
   const rows = renewals
     .map(
       (r) =>

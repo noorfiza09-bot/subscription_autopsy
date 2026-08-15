@@ -7,6 +7,7 @@ import { CategoryBreakdownChart } from "@/components/CategoryBreakdownChart";
 import { SpendTrendChart } from "@/components/SpendTrendChart";
 import { MoneySavedCard } from "@/components/MoneySavedCard";
 import { generatePdfReport } from "@/lib/pdfReport";
+import { Nav } from "@/components/Nav";
 
 type Subscription = {
   id: string;
@@ -155,7 +156,9 @@ export default function Dashboard() {
       : subs.filter((s) => (s.category ?? "Uncategorized") === categoryFilter);
 
   return (
-    <main className="min-h-screen px-6 py-16 max-w-2xl mx-auto">
+    <>
+      <Nav />
+      <main className="min-h-screen px-6 py-10 max-w-2xl mx-auto">
       <p className="font-mono text-xs tracking-widest text-sage uppercase mb-2">
         Itemized receipt · monthly summary
       </p>
@@ -292,5 +295,6 @@ export default function Dashboard() {
         </>
       )}
     </main>
+    </>
   );
 }

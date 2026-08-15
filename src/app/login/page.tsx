@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Nav } from "@/components/Nav";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -35,7 +36,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-20">
+    <main className="min-h-screen flex flex-col">
+      <Nav />
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-20">
       <div className="max-w-sm w-full">
         <p className="font-mono text-xs tracking-widest text-sage uppercase mb-3 text-center">
           Itemized receipt · sign in
@@ -77,6 +80,7 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
+      </div>
       </div>
     </main>
   );
