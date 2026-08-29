@@ -22,9 +22,17 @@ export function Nav() {
       <div className="flex items-center gap-4 text-sm font-mono">
         {status !== "loading" &&
           (session?.user ? (
-            <Link href="/dashboard" className="text-slate hover:text-paper transition-colors">
-              Dashboard
-            </Link>
+            <>
+              <Link href="/statements" className="text-slate hover:text-paper transition-colors">
+                History
+              </Link>
+              <Link href="/settings" className="text-slate hover:text-paper transition-colors">
+                Settings
+              </Link>
+              <Link href="/dashboard" className="text-slate hover:text-paper transition-colors">
+                Dashboard
+              </Link>
+            </>
           ) : (
             <>
               <Link href="/login" className="text-slate hover:text-paper transition-colors">
