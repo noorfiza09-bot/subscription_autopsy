@@ -16,20 +16,20 @@ export function SpendTrendChart({ data }: { data: TrendPoint[] }) {
   const formatted = data.map((d) => ({ ...d, label: formatMonth(d.month) }));
 
   return (
-    <div className="bg-paper text-ink rounded-sm px-5 py-4">
-      <p className="font-display font-medium mb-2">Recurring spend over time</p>
+    <div className="bg-soft text-main rounded-2xl border border-black/[0.06] px-5 py-5">
+      <p className="font-semibold tracking-tight mb-2">Recurring spend over time</p>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={formatted} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,27,43,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fontFamily: "IBM Plex Mono, monospace", fill: "#5C6B7A" }}
-              axisLine={{ stroke: "rgba(15,27,43,0.15)" }}
+              tick={{ fontSize: 11, fontFamily: "Inter, sans-serif", fill: "#5D6B7B" }}
+              axisLine={{ stroke: "rgba(0,0,0,0.12)" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fontFamily: "IBM Plex Mono, monospace", fill: "#5C6B7A" }}
+              tick={{ fontSize: 11, fontFamily: "Inter, sans-serif", fill: "#5D6B7B" }}
               axisLine={false}
               tickLine={false}
               width={50}
@@ -37,20 +37,20 @@ export function SpendTrendChart({ data }: { data: TrendPoint[] }) {
             <Tooltip
               formatter={(value: number) => [`₹${value.toFixed(2)}`, "Total"]}
               contentStyle={{
-                background: "#0F1B2B",
+                background: "#0F0F0F",
                 border: "none",
-                borderRadius: 4,
-                color: "#F7F5F0",
-                fontFamily: "IBM Plex Mono, monospace",
+                borderRadius: 8,
+                color: "#FFFFFF",
+                fontFamily: "Inter, sans-serif",
                 fontSize: 12,
               }}
             />
             <Line
               type="monotone"
               dataKey="total"
-              stroke="#6FCF97"
+              stroke="#0075DE"
               strokeWidth={2}
-              dot={{ fill: "#6FCF97", r: 3 }}
+              dot={{ fill: "#0075DE", r: 3 }}
             />
           </LineChart>
         </ResponsiveContainer>

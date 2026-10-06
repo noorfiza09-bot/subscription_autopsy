@@ -4,9 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseStatementCsv } from "@/lib/parseStatement";
 import { parseStatementPdfText } from "@/lib/parseStatementPdf";
-import { RawTransaction } from "@/lib/detectSubscriptions";
+import { detectSubscriptions, RawTransaction } from "@/lib/detectSubscriptions";
 import { normalizeMerchant } from "@/lib/normalizeMerchant";
-import { recomputeSubscriptionsForUser } from "@/lib/recomputeSubscriptions";
+import { suggestCategory } from "@/lib/suggestCategory";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,8 +27,12 @@ export async function POST(req: NextRequest) {
     let parsedTransactions: RawTransaction[];
 
     if (isPdf) {
+      // pdf-parse expects a Buffer, not a browser File/Blob.
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      // Lazy-required to avoid pdf-parse's debug-mode file read running at
+      // module load time in some bundling setups.
       const pdfParse = (await import("pdf-parse")).default;
       const pdfData = await pdfParse(buffer);
       parsedTransactions = parseStatementPdfText(pdfData.text);
@@ -63,11 +67,62 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    const subscriptionsDetected = await recomputeSubscriptionsForUser(userId);
+    // Re-run detection across ALL of the user's transactions, not just this
+    // upload, so subscriptions spanning multiple statements are caught.
+    const allTx = await prisma.transaction.findMany({ where: { userId } });
+    const detected = detectSubscriptions(
+      allTx.map((t) => ({ date: t.date, merchantRaw: t.merchantRaw, amount: t.amount }))
+    );
+
+    for (const sub of detected) {
+      const existing = await prisma.subscription.findUnique({
+        where: {
+          userId_merchantNormalized: {
+            userId,
+            merchantNormalized: sub.merchantNormalized,
+          },
+        },
+      });
+
+      const savedSub = await prisma.subscription.upsert({
+        where: {
+          userId_merchantNormalized: {
+            userId,
+            merchantNormalized: sub.merchantNormalized,
+          },
+        },
+        update: {
+          amount: sub.amount,
+          previousAmount: sub.priceHike ? sub.priceHike.from : existing?.previousAmount ?? null,
+          frequency: sub.frequency,
+          lastChargeDate: sub.lastChargeDate,
+          nextExpectedDate: sub.nextExpectedDate,
+        },
+        create: {
+          userId,
+          merchantNormalized: sub.merchantNormalized,
+          displayName: sub.displayName,
+          amount: sub.amount,
+          previousAmount: sub.priceHike ? sub.priceHike.from : null,
+          frequency: sub.frequency,
+          category: suggestCategory(sub.merchantNormalized),
+          lastChargeDate: sub.lastChargeDate,
+          nextExpectedDate: sub.nextExpectedDate,
+        },
+      });
+
+      // Link every transaction from this merchant to its subscription so
+      // we can later query real spend history (e.g. the trend chart)
+      // instead of only ever seeing the current snapshot.
+      await prisma.transaction.updateMany({
+        where: { userId, merchantNormalized: sub.merchantNormalized },
+        data: { subscriptionId: savedSub.id },
+      });
+    }
 
     return NextResponse.json({
       transactionsImported: parsedTransactions.length,
-      subscriptionsDetected,
+      subscriptionsDetected: detected.length,
     });
   } catch (err) {
     console.error(err);

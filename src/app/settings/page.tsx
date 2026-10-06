@@ -67,8 +67,8 @@ export default function SettingsPage() {
     <>
       <Nav />
       <main className="min-h-screen px-6 py-10 max-w-lg mx-auto">
-        <p className="font-mono text-xs tracking-widest text-sage uppercase mb-2">
-          Itemized receipt · account settings
+        <p className="text-sm font-medium text-brand mb-2">
+          account settings
         </p>
         <h1 className="font-display text-3xl font-bold mb-10">Account settings</h1>
 
@@ -82,7 +82,7 @@ export default function SettingsPage() {
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="bg-ink-light border border-paper/20 rounded-sm px-4 py-3 text-paper placeholder:text-slate focus:outline-none focus:border-sage/60"
+              className="bg-soft border border-black/10 rounded-lg px-4 py-3 text-main placeholder:text-slate focus:outline-none focus:border-brand"
             />
             <input
               type="password"
@@ -91,7 +91,7 @@ export default function SettingsPage() {
               minLength={8}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="bg-ink-light border border-paper/20 rounded-sm px-4 py-3 text-paper placeholder:text-slate focus:outline-none focus:border-sage/60"
+              className="bg-soft border border-black/10 rounded-lg px-4 py-3 text-main placeholder:text-slate focus:outline-none focus:border-brand"
             />
 
             {passwordError && <p className="text-sm text-coral">{passwordError}</p>}
@@ -100,7 +100,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={passwordLoading}
-              className="mt-1 self-start rounded-sm bg-sage px-5 py-2.5 font-display font-medium text-ink disabled:opacity-40 hover:bg-sage/90 transition-colors"
+              className="mt-1 self-start rounded-lg bg-brand px-5 py-2.5 font-display font-medium text-white disabled:opacity-40 hover:bg-brand-dark transition-colors"
             >
               {passwordLoading ? "Updating…" : "Update password"}
             </button>
@@ -108,7 +108,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Danger zone */}
-        <section className="border border-coral/30 rounded-sm p-5">
+        <section className="border border-coral/30 rounded-lg p-5">
           <h2 className="font-display text-lg font-medium text-coral mb-2">Danger zone</h2>
           <p className="text-slate text-sm mb-4">
             Deleting your account permanently removes your statements, transactions, and
@@ -118,20 +118,20 @@ export default function SettingsPage() {
           {!showDeleteForm ? (
             <button
               onClick={() => setShowDeleteForm(true)}
-              className="text-xs font-mono px-4 py-2 border border-coral/40 text-coral rounded-sm hover:bg-coral/10 transition-colors"
+              className="text-xs font-body px-4 py-2 border border-coral/40 text-coral rounded-lg hover:bg-coral/10 transition-colors"
             >
               Delete my account
             </button>
           ) : (
             <form onSubmit={handleDeleteAccount} className="flex flex-col gap-3">
               <label className="text-xs text-slate">
-                Type <span className="font-mono text-paper">DELETE</span> to confirm
+                Type <span className="font-body text-main">DELETE</span> to confirm
               </label>
               <input
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="bg-ink-light border border-coral/30 rounded-sm px-4 py-2.5 text-paper focus:outline-none focus:border-coral/60"
+                className="bg-soft border border-coral/30 rounded-lg px-4 py-2.5 text-main focus:outline-none focus:border-coral/60"
               />
               <input
                 type="password"
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                 required
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                className="bg-ink-light border border-coral/30 rounded-sm px-4 py-2.5 text-paper placeholder:text-slate focus:outline-none focus:border-coral/60"
+                className="bg-soft border border-coral/30 rounded-lg px-4 py-2.5 text-main placeholder:text-slate focus:outline-none focus:border-coral/60"
               />
 
               {deleteError && <p className="text-sm text-coral">{deleteError}</p>}
@@ -148,14 +148,14 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={deleteConfirmText !== "DELETE" || deleteLoading}
-                  className="text-xs font-mono px-4 py-2 bg-coral text-ink rounded-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-coral/90 transition-colors"
+                  className="text-xs font-body px-4 py-2 bg-coral text-white rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-coral/90 transition-colors"
                 >
                   {deleteLoading ? "Deleting…" : "Permanently delete account"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowDeleteForm(false)}
-                  className="text-xs font-mono px-4 py-2 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors"
+                  className="text-xs font-body px-4 py-2 border border-black/10 rounded-lg hover:bg-soft transition-colors"
                 >
                   Cancel
                 </button>

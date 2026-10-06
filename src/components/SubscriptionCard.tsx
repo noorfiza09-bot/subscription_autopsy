@@ -34,22 +34,21 @@ export function SubscriptionCard({
   const cancellationInfo = getCancellationInfo(sub.merchantNormalized);
 
   return (
-    <div className="bg-paper text-ink rounded-sm overflow-hidden">
-      <div className="perforated-top" />
-      <div className="px-5 py-4">
+    <div className="bg-soft text-main rounded-2xl border border-black/[0.06] overflow-hidden">
+      <div className="px-5 py-5">
         <div className="flex items-baseline">
-          <span className="font-display font-medium">{sub.displayName}</span>
-          <span className="leader" />
-          <span className="font-mono font-medium">₹{sub.amount.toFixed(2)}</span>
+          <span className="text-lg font-semibold tracking-tight">{sub.displayName}</span>
+          <span className="flex-1" />
+          <span className="text-lg font-semibold tracking-tight">₹{sub.amount.toFixed(2)}</span>
         </div>
 
         {sub.previousAmount != null && sub.previousAmount !== sub.amount && (
-          <div className="text-xs font-mono text-coral mt-0.5">
+          <div className="text-xs font-body text-coral mt-0.5">
             ▲ went up from ₹{sub.previousAmount.toFixed(2)}
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-1 text-xs text-slate font-mono">
+        <div className="flex items-center justify-between mt-1 text-xs text-slate font-body">
           <span>
             {sub.frequency.toLowerCase()} · next ~
             {sub.nextExpectedDate
@@ -70,14 +69,14 @@ export function SubscriptionCard({
           {!sub.isConfirmed && (
             <button
               onClick={() => onConfirm(sub.id)}
-              className="text-xs font-mono px-3 py-1 bg-ink text-paper rounded-sm hover:bg-ink-light transition-colors"
+              className="text-xs font-body px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors"
             >
               Yep, that's mine
             </button>
           )}
           <button
             onClick={() => onDismiss(sub.id)}
-            className="text-xs font-mono px-3 py-1 border border-ink/20 rounded-sm hover:bg-paper-dim transition-colors"
+            className="text-xs font-body px-3 py-1.5 border border-black/15 rounded-lg hover:bg-white transition-colors"
           >
             Not a subscription
           </button>
@@ -85,7 +84,7 @@ export function SubscriptionCard({
           {sub.isConfirmed && (
             <button
               onClick={() => onCancel(sub.id)}
-              className="text-xs font-mono px-3 py-1 border border-sage/50 text-sage rounded-sm hover:bg-sage/10 transition-colors"
+              className="text-xs font-body px-3 py-1.5 border border-sage/50 text-sage rounded-lg hover:bg-sage/10 transition-colors"
               title="Track this as money saved"
             >
               I cancelled this ✕
@@ -97,7 +96,7 @@ export function SubscriptionCard({
               href={cancellationInfo.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-mono px-3 py-1 border border-coral/40 text-coral rounded-sm hover:bg-coral/10 transition-colors"
+              className="text-xs font-body px-3 py-1.5 border border-coral/40 text-coral rounded-lg hover:bg-coral/10 transition-colors"
               title={cancellationInfo.note}
             >
               Cancel this ↗
@@ -107,7 +106,7 @@ export function SubscriptionCard({
           <select
             value={sub.category ?? ""}
             onChange={(e) => onCategoryChange(sub.id, e.target.value)}
-            className="text-xs font-mono px-2 py-1 border border-ink/20 rounded-sm bg-paper text-ink ml-auto"
+            className="text-xs font-body px-2 py-1.5 border border-black/15 rounded-lg bg-white text-main ml-auto"
           >
             <option value="" disabled>
               Categorize…

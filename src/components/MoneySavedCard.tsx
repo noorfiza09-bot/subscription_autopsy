@@ -21,16 +21,16 @@ export function MoneySavedCard({
   if (items.length === 0) return null;
 
   return (
-    <div className="bg-sage/10 border border-sage/30 rounded-sm px-5 py-4">
-      <p className="font-display font-medium text-sage mb-1">💰 Money saved</p>
-      <p className="text-sm text-paper mb-3">
+    <div className="bg-[#EAF7F0] rounded-2xl px-5 py-5">
+      <p className="font-semibold text-sage mb-1">💰 Money saved</p>
+      <p className="text-sm text-main mb-3">
         You've cancelled {items.length} subscription{items.length !== 1 ? "s" : ""} — roughly{" "}
-        <span className="font-mono">₹{totalSaved.toFixed(2)}</span> saved so far, freeing up{" "}
-        <span className="font-mono">₹{monthlySavings.toFixed(2)}</span>/month going forward.
+        <span className="font-semibold">₹{totalSaved.toFixed(2)}</span> saved so far, freeing up{" "}
+        <span className="font-semibold">₹{monthlySavings.toFixed(2)}</span>/month going forward.
       </p>
       <div className="flex flex-col gap-1">
         {items.map((item) => (
-          <div key={item.id} className="flex items-baseline text-xs font-mono text-slate">
+          <div key={item.id} className="flex items-baseline text-xs text-muted">
             <span>{item.displayName}</span>
             <span className="leader" />
             <span>₹{item.savedSoFar.toFixed(2)} saved</span>

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
   description:
     "Upload a bank statement and find every recurring subscription hiding in it — including the price hikes you never noticed.",
-  themeColor: "#0F1B2B",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,11 +18,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://db.onlinewebfonts.com/c/13ab13418f633c1b0516fed6e30bedbc?family=Suisse+Int%27l"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-ink text-paper font-body">
+      <body className="bg-white text-main font-body">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>
     </html>

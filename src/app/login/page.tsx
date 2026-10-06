@@ -40,8 +40,8 @@ export default function LoginPage() {
       <Nav />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-20">
       <div className="max-w-sm w-full">
-        <p className="font-mono text-xs tracking-widest text-sage uppercase mb-3 text-center">
-          Itemized receipt · sign in
+        <p className="text-sm font-medium text-brand mb-3 text-center">
+          sign in
         </p>
         <h1 className="font-display text-3xl font-bold mb-8 text-center">Welcome back</h1>
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-ink-light border border-paper/20 rounded-sm px-4 py-3 text-paper placeholder:text-slate focus:outline-none focus:border-sage/60"
+            className="bg-soft border border-black/10 rounded-lg px-4 py-3 text-main placeholder:text-slate focus:outline-none focus:border-brand"
           />
           <input
             type="password"
@@ -60,7 +60,7 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-ink-light border border-paper/20 rounded-sm px-4 py-3 text-paper placeholder:text-slate focus:outline-none focus:border-sage/60"
+            className="bg-soft border border-black/10 rounded-lg px-4 py-3 text-main placeholder:text-slate focus:outline-none focus:border-brand"
           />
 
           {error && <p className="text-sm text-coral">{error}</p>}
@@ -68,7 +68,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 rounded-sm bg-sage py-3 font-display font-medium text-ink disabled:opacity-40 hover:bg-sage/90 transition-colors"
+            className="mt-2 rounded-lg bg-brand py-3 font-display font-medium text-white disabled:opacity-40 hover:bg-brand-dark transition-colors"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
         <p className="text-sm text-slate text-center mt-6">
           No account yet?{" "}
-          <Link href="/signup" className="text-sage hover:underline">
+          <Link href="/signup" className="text-brand hover:underline">
             Create one
           </Link>
         </p>

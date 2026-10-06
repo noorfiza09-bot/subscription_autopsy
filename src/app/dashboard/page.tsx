@@ -6,7 +6,6 @@ import { SubscriptionCard } from "@/components/SubscriptionCard";
 import { CategoryBreakdownChart } from "@/components/CategoryBreakdownChart";
 import { SpendTrendChart } from "@/components/SpendTrendChart";
 import { MoneySavedCard } from "@/components/MoneySavedCard";
-import { PossibleTrialsCard } from "@/components/PossibleTrialsCard";
 import { generatePdfReport } from "@/lib/pdfReport";
 import { Nav } from "@/components/Nav";
 
@@ -34,14 +33,6 @@ type SavedItem = {
   frequency: string;
   cancelledAt: string | null;
   savedSoFar: number;
-};
-
-type TrialItem = {
-  merchantNormalized: string;
-  displayName: string;
-  amount: number;
-  date: string;
-  cancellationUrl: string;
 };
 
 function monthlyEquivalent(sub: Subscription) {
@@ -78,10 +69,8 @@ export default function Dashboard() {
     totalSaved: number;
     monthlySavings: number;
   }>({ items: [], totalSaved: 0, monthlySavings: 0 });
-  const [trials, setTrials] = useState<TrialItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState("");
   const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
   const [monthlyBudget, setMonthlyBudget] = useState<number | null>(null);
   const [budgetInput, setBudgetInput] = useState("");
@@ -91,13 +80,11 @@ export default function Dashboard() {
       fetch("/api/subscriptions").then((r) => r.json()),
       fetch("/api/subscriptions/trend").then((r) => r.json()),
       fetch("/api/subscriptions/savings").then((r) => r.json()),
-      fetch("/api/subscriptions/trials").then((r) => r.json()),
       fetch("/api/user/settings").then((r) => r.json()),
-    ]).then(([subsData, trendData, savingsData, trialsData, settingsData]) => {
+    ]).then(([subsData, trendData, savingsData, settingsData]) => {
       setSubs(subsData);
       setTrend(trendData);
       setSavings(savingsData);
-      setTrials(trialsData);
       setEmailNotificationsEnabled(settingsData.emailNotificationsEnabled);
       setMonthlyBudget(settingsData.monthlyBudget);
       setBudgetInput(settingsData.monthlyBudget != null ? String(settingsData.monthlyBudget) : "");
@@ -135,6 +122,8 @@ export default function Dashboard() {
     if (body.isDismissed) {
       setSubs((prev) => prev.filter((s) => s.id !== id));
       if (body.wasCancelled) {
+        // Refresh savings so the tracker reflects the new cancellation
+        // immediately instead of waiting for a page reload.
         fetch("/api/subscriptions/savings")
           .then((r) => r.json())
           .then(setSavings);
@@ -142,23 +131,6 @@ export default function Dashboard() {
     } else {
       setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, ...body } : s)));
     }
-  }
-
-  async function dismissTrial(merchantNormalized: string) {
-    const trial = trials.find((t) => t.merchantNormalized === merchantNormalized);
-    if (!trial) return;
-
-    setTrials((prev) => prev.filter((t) => t.merchantNormalized !== merchantNormalized));
-
-    await fetch("/api/subscriptions/trials/dismiss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        merchantNormalized: trial.merchantNormalized,
-        displayName: trial.displayName,
-        amount: trial.amount,
-      }),
-    });
   }
 
   const monthlyTotal = subs.reduce((sum, s) => sum + monthlyEquivalent(s), 0);
@@ -178,158 +150,151 @@ export default function Dashboard() {
     [subs]
   );
 
-  const visibleSubs = subs
-    .filter((s) => categoryFilter === "All" || (s.category ?? "Uncategorized") === categoryFilter)
-    .filter((s) => s.displayName.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+  const visibleSubs =
+    categoryFilter === "All"
+      ? subs
+      : subs.filter((s) => (s.category ?? "Uncategorized") === categoryFilter);
 
   return (
     <>
       <Nav />
-      <main className="min-h-screen px-6 py-10 max-w-2xl mx-auto">
-        <p className="font-mono text-xs tracking-widest text-sage uppercase mb-2">
-          Itemized receipt · monthly summary
-        </p>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-bold mb-1">Your recurring spend</h1>
-            <p className="text-slate mb-2">
-              {subs.length} subscription{subs.length !== 1 ? "s" : ""} detected · roughly{" "}
-              <span className="font-mono text-paper">₹{monthlyTotal.toFixed(2)}</span> / month
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleEmailNotifications}
-              className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors whitespace-nowrap"
-              title="Toggle email renewal reminders"
-            >
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  emailNotificationsEnabled ? "bg-sage" : "bg-slate"
-                }`}
-              />
-              Email reminders {emailNotificationsEnabled ? "on" : "off"}
-            </button>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors whitespace-nowrap"
-            >
-              Sign out
-            </button>
-          </div>
+      <main className="min-h-screen px-6 py-10 max-w-3xl mx-auto">
+      <p className="text-sm font-medium text-brand mb-2">
+        monthly summary
+      </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-bold mb-1">Your recurring spend</h1>
+          <p className="text-slate mb-2">
+            {subs.length} subscription{subs.length !== 1 ? "s" : ""} detected · roughly{" "}
+            <span className="font-body text-main">₹{monthlyTotal.toFixed(2)}</span> / month
+          </p>
         </div>
-
-        {/* Budget setting */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <label className="text-xs font-mono text-slate">Monthly budget ₹</label>
-          <input
-            type="number"
-            value={budgetInput}
-            onChange={(e) => setBudgetInput(e.target.value)}
-            onBlur={saveBudget}
-            placeholder="none set"
-            className="w-28 text-xs font-mono px-2 py-1 border border-paper/20 rounded-sm bg-ink-light text-paper"
-          />
-          {monthlyBudget != null && (
-            <span className={`text-xs font-mono ${overBudget ? "text-coral" : "text-sage"}`}>
-              {overBudget
-                ? `▲ ₹${(monthlyTotal - monthlyBudget).toFixed(2)} over budget`
-                : `✓ ₹${(monthlyBudget - monthlyTotal).toFixed(2)} under budget`}
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleEmailNotifications}
+            className="flex items-center gap-2 text-xs font-body px-3 py-1.5 border border-black/10 rounded-lg hover:bg-soft transition-colors whitespace-nowrap"
+            title="Toggle email renewal reminders"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                emailNotificationsEnabled ? "bg-sage" : "bg-slate"
+              }`}
+            />
+            Email reminders {emailNotificationsEnabled ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="text-xs font-body px-3 py-1.5 border border-black/10 rounded-lg hover:bg-soft transition-colors whitespace-nowrap"
+          >
+            Sign out
+          </button>
         </div>
+      </div>
 
-        {loading && (
-          <div className="flex flex-col gap-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-24 rounded-sm bg-ink-light animate-pulse" />
-            ))}
-          </div>
+      {/* Budget setting */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <label className="text-xs font-body text-slate">Monthly budget ₹</label>
+        <input
+          type="number"
+          value={budgetInput}
+          onChange={(e) => setBudgetInput(e.target.value)}
+          onBlur={saveBudget}
+          placeholder="none set"
+          className="w-28 text-xs font-body px-2 py-1 border border-black/10 rounded-lg bg-soft text-main"
+        />
+        {monthlyBudget != null && (
+          <span className={`text-xs font-body ${overBudget ? "text-coral" : "text-sage"}`}>
+            {overBudget
+              ? `▲ ₹${(monthlyTotal - monthlyBudget).toFixed(2)} over budget`
+              : `✓ ₹${(monthlyBudget - monthlyTotal).toFixed(2)} under budget`}
+          </span>
         )}
+      </div>
 
-        {!loading && subs.length === 0 && savings.items.length === 0 && trials.length === 0 && (
-          <div className="border border-dashed border-paper/20 rounded-sm px-6 py-12 text-center">
-            <p className="font-display text-lg mb-1">Nothing here yet</p>
-            <p className="text-slate text-sm">
-              Upload a statement from the home page and we'll comb through it for
-              recurring charges.
-            </p>
+      {loading && (
+        <div className="flex flex-col gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 rounded-lg bg-soft animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {!loading && subs.length === 0 && savings.items.length === 0 && (
+        <div className="border border-dashed border-black/10 rounded-lg px-6 py-12 text-center">
+          <p className="font-display text-lg mb-1">Nothing here yet</p>
+          <p className="text-slate text-sm">
+            Upload a statement from the home page and we'll comb through it for
+            recurring charges.
+          </p>
+        </div>
+      )}
+
+      {!loading && (subs.length > 0 || savings.items.length > 0) && (
+        <>
+          <div className="flex flex-col gap-4 mb-6">
+            <MoneySavedCard
+              items={savings.items}
+              totalSaved={savings.totalSaved}
+              monthlySavings={savings.monthlySavings}
+            />
+            {subs.length > 0 && <CategoryBreakdownChart data={categoryTotals} />}
+            {subs.length > 0 && <SpendTrendChart data={trend} />}
           </div>
-        )}
 
-        {!loading && (subs.length > 0 || savings.items.length > 0 || trials.length > 0) && (
-          <>
-            <div className="flex flex-col gap-4 mb-6">
-              <PossibleTrialsCard trials={trials} onDismiss={dismissTrial} />
-              <MoneySavedCard
-                items={savings.items}
-                totalSaved={savings.totalSaved}
-                monthlySavings={savings.monthlySavings}
-              />
-              {subs.length > 0 && <CategoryBreakdownChart data={categoryTotals} />}
-              {subs.length > 0 && <SpendTrendChart data={trend} />}
-            </div>
+          {subs.length > 0 && (
+            <>
+              <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="text-xs font-body px-2 py-1.5 border border-black/10 rounded-lg bg-soft text-main"
+                >
+                  {availableCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
 
-            {subs.length > 0 && (
-              <>
-                <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search subscriptions…"
-                    className="flex-1 min-w-[160px] text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm bg-ink-light text-paper placeholder:text-slate"
-                  />
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="text-xs font-mono px-2 py-1.5 border border-paper/20 rounded-sm bg-ink-light text-paper"
-                  >
-                    {availableCategories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 mb-4">
+                <div className="flex gap-2">
                   <button
                     onClick={() => downloadCsv(subs)}
-                    className="text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors"
+                    className="text-xs font-body px-3 py-1.5 border border-black/10 rounded-lg hover:bg-soft transition-colors"
                   >
                     Export CSV
                   </button>
                   <button
                     onClick={() => generatePdfReport(subs, monthlyTotal, monthlyBudget)}
-                    className="text-xs font-mono px-3 py-1.5 border border-paper/20 rounded-sm hover:bg-ink-light transition-colors"
+                    className="text-xs font-body px-3 py-1.5 border border-black/10 rounded-lg hover:bg-soft transition-colors"
                   >
                     Download PDF
                   </button>
                 </div>
+              </div>
 
-                <div className="flex flex-col gap-4">
-                  {visibleSubs.map((sub) => (
-                    <SubscriptionCard
-                      key={sub.id}
-                      sub={sub}
-                      onConfirm={(id) => patchSub(id, { isConfirmed: true })}
-                      onDismiss={(id) => patchSub(id, { isDismissed: true })}
-                      onCancel={(id) => patchSub(id, { isDismissed: true, wasCancelled: true })}
-                      onCategoryChange={(id, category) => patchSub(id, { category })}
-                    />
-                  ))}
-                  {visibleSubs.length === 0 && (
-                    <p className="text-slate text-sm text-center py-6">
-                      No subscriptions match your search/filter.
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </main>
+              <div className="flex flex-col gap-4">
+                {visibleSubs.map((sub) => (
+                  <SubscriptionCard
+                    key={sub.id}
+                    sub={sub}
+                    onConfirm={(id) => patchSub(id, { isConfirmed: true })}
+                    onDismiss={(id) => patchSub(id, { isDismissed: true })}
+                    onCancel={(id) => patchSub(id, { isDismissed: true, wasCancelled: true })}
+                    onCategoryChange={(id, category) => patchSub(id, { category })}
+                  />
+                ))}
+                {visibleSubs.length === 0 && (
+                  <p className="text-slate text-sm text-center py-6">
+                    No subscriptions in this category.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </main>
     </>
   );
 }

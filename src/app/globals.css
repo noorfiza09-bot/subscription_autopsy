@@ -2,51 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dotted leader between a merchant name and its amount, like a printed receipt. */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
+/* Dotted leader between a label and its amount (used in the savings tracker). */
 .leader {
   flex: 1;
-  border-bottom: 1px dotted rgba(247, 245, 240, 0.25);
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
   margin: 0 0.6rem;
   transform: translateY(-4px);
 }
 
-/* Perforated edge along the top of a "torn receipt" card. */
-.perforated-top {
-  background-image: radial-gradient(circle, rgba(15, 27, 43, 0.9) 2px, transparent 2px);
-  background-size: 14px 100%;
-  background-position: top;
-  background-repeat: repeat-x;
-  height: 6px;
-}
+/* ---------- Hero entrance animations (pure CSS, no JS) ---------- */
+@keyframes fade-up    { from { opacity: 0; transform: translateY(24px); }  to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-down  { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-left  { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fade-right { from { opacity: 0; transform: translateX(20px); }  to { opacity: 1; transform: translateX(0); } }
+@keyframes fade-scale { from { opacity: 0; transform: scale(0.92); }       to { opacity: 1; transform: scale(1); } }
+@keyframes bar-grow   { from { transform: scaleY(0); opacity: 0; }         to { transform: scaleY(1); opacity: 1; } }
 
-@keyframes receipt-line-print {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-receipt-line {
-  animation: receipt-line-print 0.4s ease-out forwards;
-}
+.animate-fade-up    { animation: fade-up    0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-down  { animation: fade-down  0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-left  { animation: fade-left  0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-right { animation: fade-right 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-scale { animation: fade-scale 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-bar-grow   { animation: bar-grow   0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-receipt-line {
+  .animate-fade-up,
+  .animate-fade-down,
+  .animate-fade-left,
+  .animate-fade-right,
+  .animate-fade-scale,
+  .animate-bar-grow {
     animation: none;
-    opacity: 1;
+    opacity: 1 !important;
+    transform: none;
   }
 }
 
 ::selection {
-  background: #6fcf97;
-  color: #0f1b2b;
+  background: #0075de;
+  color: #fff;
 }
 
 :focus-visible {
-  outline: 2px solid #6fcf97;
+  outline: 2px solid #0075de;
   outline-offset: 2px;
+}
+
+/* ---------- Hero background motion ---------- */
+.hero-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+}
+.hero-blob-a {
+  width: 620px; height: 620px; top: -160px; left: -120px;
+  background: radial-gradient(circle, rgba(0, 117, 222, 0.75), transparent 70%);
+  animation: blob-a 18s ease-in-out infinite alternate;
+}
+.hero-blob-b {
+  width: 560px; height: 560px; bottom: -200px; right: -100px;
+  background: radial-gradient(circle, rgba(124, 92, 224, 0.55), transparent 70%);
+  animation: blob-b 22s ease-in-out infinite alternate;
+}
+.hero-blob-c {
+  width: 420px; height: 420px; top: 35%; left: 45%;
+  background: radial-gradient(circle, rgba(27, 154, 138, 0.4), transparent 70%);
+  animation: blob-c 26s ease-in-out infinite alternate;
+}
+@keyframes blob-a { to { transform: translate(180px, 120px) scale(1.15); } }
+@keyframes blob-b { to { transform: translate(-200px, -90px) scale(1.1); } }
+@keyframes blob-c { to { transform: translate(-160px, 110px) scale(0.85); } }
+
+.hero-chip {
+  position: absolute;
+  top: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  opacity: 0;
+  animation-name: chip-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes chip-rise {
+  0%   { transform: translateY(105vh); opacity: 0; }
+  10%  { opacity: 0.9; }
+  85%  { opacity: 0.9; }
+  100% { transform: translateY(-15vh); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blob, .hero-chip { animation: none; }
+  .hero-chip { display: none; }
 }

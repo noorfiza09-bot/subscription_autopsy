@@ -5,23 +5,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#0F1B2B",
-        "ink-light": "#16263B",
-        paper: "#F7F5F0",
-        "paper-dim": "#EDEAE2",
-        sage: "#6FCF97",
-        amber: "#E8A33D",
-        coral: "#E85D4E",
-        slate: "#5C6B7A",
+        // Light "workspace" palette (Notion-style)
+        main: "#0F0F0F",
+        muted: "#5D6B7B",
+        slate: "#5D6B7B",
+        soft: "#F6F9FC",
+        tint: "#EAF3FC",
+        brand: "#0075DE",
+        "brand-dark": "#005BAB",
+        // Status colours
+        sage: "#1A9E5C",
+        amber: "#D98A1A",
+        coral: "#E0453A",
+        // Hero
+        night: "#080A19",
       },
       fontFamily: {
-        display: ["Space Grotesk", "sans-serif"],
-        body: ["IBM Plex Sans", "sans-serif"],
-        mono: ["IBM Plex Mono", "monospace"],
-      },
-      backgroundImage: {
-        perforation:
-          "radial-gradient(circle, #0F1B2B 1.5px, transparent 1.5px)",
+        display: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        hero: ["Suisse Intl", "Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
     },
   },
